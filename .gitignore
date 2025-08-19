@@ -1,13 +1,13 @@
-# Developer tools' files
-.lite_workspace.lua
+# dependencies
+node_modules
 
-# Neutralinojs binaries and builds
-/bin
-/dist
-
-# Neutralinojs client (minified)
-neutralino.js
-
-# Neutralinojs related files
-.storage
+# logs
 *.log
+
+# next.js
+.next
+next-env.d.ts
+
+# build
+/app
+dist

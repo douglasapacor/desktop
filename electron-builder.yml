@@ -1,0 +1,12 @@
+appId: com.leitor.inr
+productName: Leitor INR
+copyright: Copyright © 2025 INR Publicações
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - from: .
+    filter:
+      - package.json
+      - app
+publish: null
