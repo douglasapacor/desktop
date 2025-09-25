@@ -1,7 +1,7 @@
 appId: com.leitor.inr
 productName: Leitor INR
 copyright: Copyright © 2025 INR Publicações
-buildVersion: 0.3.0
+buildVersion: 1.0.0
 icon: "resources/icon.png"
 directories:
   output: dist

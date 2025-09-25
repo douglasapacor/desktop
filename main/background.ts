@@ -11,6 +11,7 @@ import serve from "electron-serve";
 import path from "path";
 import fetch from "./fetch";
 import { createWindow } from "./helpers";
+import fs from "fs/promises";
 const iconPath = `${path.join(__dirname, "../resources/windowIcon.png")}`;
 const isProd = process.env.NODE_ENV === "production";
 let window: BrowserWindow | null;
@@ -98,8 +99,32 @@ app.on("window-all-closed", () => {
 
 ipcMain.handle("request:home", async (_) => {
   try {
-    const res = await fetch.get("https://api.publicacoesinr.com.br/home");
-    return res;
+    return await fetch.get("https://api.publicacoesinr.com.br/home");
+  } catch (error) {
+    return { error: error.message };
+  }
+});
+
+ipcMain.handle("request:version", async (_) => {
+  try {
+    const stringPackageJson = await fs.readFile(
+      path.join(__dirname, "../package.json"),
+      { encoding: "utf-8" }
+    );
+
+    if (!stringPackageJson) throw new Error("Erro");
+
+    const packageJson = JSON.parse(stringPackageJson);
+
+    return packageJson.version;
+  } catch (error) {
+    return { error: error.message };
+  }
+});
+
+ipcMain.handle("request:login", async (_, data) => {
+  try {
+    return await fetch.post("https://api.publicacoesinr.com.br/home", data);
   } catch (error) {
     return { error: error.message };
   }
