@@ -3,30 +3,38 @@ import {
   BrowserWindow,
   ipcMain,
   Menu,
+  NativeImage,
   nativeImage,
   powerSaveBlocker,
   Tray,
 } from "electron";
 import serve from "electron-serve";
 import path from "path";
-import fetch from "./fetch";
-import { createWindow } from "./helpers";
-import fs from "fs/promises";
-const iconPath = `${path.join(__dirname, "../resources/windowIcon.png")}`;
-const isProd = process.env.NODE_ENV === "production";
-let window: BrowserWindow | null;
+import * as proccesses from "./processes";
+import { createWindow, root } from "./lib";
+import { ICON_PATH, IS_PROD, OS_USER_DATA } from "./static";
+let finalPath = "";
 let tray = null;
+let icon: NativeImage | null = null;
+let mainWindow: BrowserWindow | null = null;
 
 powerSaveBlocker.start("prevent-app-suspension");
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 
-if (isProd) serve({ directory: "app" });
-else app.setPath("userData", `${app.getPath("userData")} (dev)`);
+if (IS_PROD) {
+  finalPath = OS_USER_DATA;
+  serve({ directory: "app" });
+} else {
+  finalPath = `${OS_USER_DATA} (dev)`;
+  app.setPath("userData", finalPath);
+}
+
+root.register({ path: finalPath });
 
 (async () => {
   await app.whenReady();
 
-  const mainWindow = createWindow("main", {
+  mainWindow = createWindow("main", {
     width: 1000,
     height: 600,
     webPreferences: {
@@ -36,7 +44,7 @@ else app.setPath("userData", `${app.getPath("userData")} (dev)`);
 
   Menu.setApplicationMenu(null);
 
-  const icon = nativeImage.createFromPath(iconPath);
+  icon = nativeImage.createFromPath(ICON_PATH);
   tray = new Tray(icon);
 
   const contextMenu = Menu.buildFromTemplate([
@@ -44,24 +52,24 @@ else app.setPath("userData", `${app.getPath("userData")} (dev)`);
       label: "Boletins",
       type: "normal",
       click: function () {
-        window.webContents.send("goToBoletins");
-        window.maximize();
+        mainWindow.webContents.send("goToBoletins");
+        mainWindow.maximize();
       },
     },
     {
       label: "Classificadores",
       type: "normal",
       click: function () {
-        window.webContents.send("goToClassificadores");
-        window.maximize();
+        mainWindow.webContents.send("goToClassificadores");
+        mainWindow.maximize();
       },
     },
     {
       label: "Favoritos",
       type: "normal",
       click: function () {
-        window.webContents.send("goToFavoritos");
-        window.maximize();
+        mainWindow.webContents.send("goToFavoritos");
+        mainWindow.maximize();
       },
     },
     { type: "separator" },
@@ -78,7 +86,7 @@ else app.setPath("userData", `${app.getPath("userData")} (dev)`);
   tray.setToolTip("INR Publicações");
   tray.setContextMenu(contextMenu);
 
-  if (isProd) {
+  if (IS_PROD) {
     await mainWindow.loadURL("app://./home");
   } else {
     const port = process.argv[2];
@@ -97,35 +105,6 @@ app.on("window-all-closed", () => {
 //   path: app.getPath("exe"),
 // });
 
-ipcMain.handle("request:home", async (_) => {
-  try {
-    return await fetch.get("https://api.publicacoesinr.com.br/home");
-  } catch (error) {
-    return { error: error.message };
-  }
-});
-
-ipcMain.handle("request:version", async (_) => {
-  try {
-    const stringPackageJson = await fs.readFile(
-      path.join(__dirname, "../package.json"),
-      { encoding: "utf-8" }
-    );
-
-    if (!stringPackageJson) throw new Error("Erro");
-
-    const packageJson = JSON.parse(stringPackageJson);
-
-    return packageJson.version;
-  } catch (error) {
-    return { error: error.message };
-  }
-});
-
-ipcMain.handle("request:login", async (_, data) => {
-  try {
-    return await fetch.post("https://api.publicacoesinr.com.br/home", data);
-  } catch (error) {
-    return { error: error.message };
-  }
-});
+Object.values(proccesses).map((proccess) =>
+  ipcMain.handle(proccess.key, proccess.handle)
+);

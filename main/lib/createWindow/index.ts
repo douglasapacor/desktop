@@ -6,7 +6,7 @@ import {
 } from "electron";
 import Store from "electron-store";
 
-export const createWindow = (
+const createWindow = (
   windowName: string,
   options: BrowserWindowConstructorOptions
 ): BrowserWindow => {
@@ -74,3 +74,5 @@ export const createWindow = (
   win.on("close", saveState);
   return win;
 };
+
+export default createWindow;

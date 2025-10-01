@@ -55,10 +55,8 @@ const Frame: FC<{
   const [password, setPassword] = useState("");
   const [loginErrorMessage, setLoginErrorMessage] = useState("asdsaasd");
   const [showLoginErrorMessage, setShowLoginErrorMessage] = useState(true);
-
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const notificationsOpen = Boolean(anchorEl);
-
   const ctx = useCtx();
 
   const handleClickNotifications = (event: React.MouseEvent<HTMLElement>) => {
